@@ -51,6 +51,10 @@ namespace StarterAssets
 		[Tooltip("How far in degrees can you move the camera down")]
 		public float BottomClamp = -90.0f;
 
+		public GameObject jumpTargetPrefab;
+		Transform _jumpTargetTransform;
+		Transform _cameraTransform;
+
 		// cinemachine
 		private float _cinemachineTargetPitch;
 
@@ -72,7 +76,7 @@ namespace StarterAssets
 		private StarterAssetsInputs _input;
 		private GameObject _mainCamera;
 
-		private const float _threshold = 0.01f;
+		const float _threshold = 0; //0.01f;
 
 		private bool IsCurrentDeviceMouse
 		{
@@ -108,6 +112,11 @@ namespace StarterAssets
 			// reset our timeouts on start
 			_jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
+
+			var newJumpTarget = Instantiate(jumpTargetPrefab);
+			_jumpTargetTransform = newJumpTarget.transform;
+
+			_cameraTransform = GameObject.Find("MainCamera").transform;
 		}
 
 		private void Update()
@@ -115,6 +124,7 @@ namespace StarterAssets
 			JumpAndGravity();
 			GroundedCheck();
 			Move();
+			CastRayFromPlayerView();  // could be in FixedUpdate (as well as methods above)
 		}
 
 		private void LateUpdate()
@@ -137,7 +147,7 @@ namespace StarterAssets
 				//Don't multiply mouse input by Time.deltaTime
 				float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 				
-				_cinemachineTargetPitch += _input.look.y * RotationSpeed * deltaTimeMultiplier;
+				_cinemachineTargetPitch -= _input.look.y * RotationSpeed * deltaTimeMultiplier;
 				_rotationVelocity = _input.look.x * RotationSpeed * deltaTimeMultiplier;
 
 				// clamp our pitch rotation
@@ -263,6 +273,19 @@ namespace StarterAssets
 
 			// when selected, draw a gizmo in the position of, and matching radius of, the grounded collider
 			Gizmos.DrawSphere(new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z), GroundedRadius);
+		}
+
+		void CastRayFromPlayerView()
+		{
+			RaycastHit hit;
+
+			if (Physics.Raycast(_cameraTransform.position, _cameraTransform.forward, out hit))
+			{
+				_jumpTargetTransform.gameObject.SetActive(true);
+				_jumpTargetTransform.position = hit.point;
+			}
+			else if (_jumpTargetTransform.gameObject.activeSelf)
+				_jumpTargetTransform.gameObject.SetActive(false);
 		}
 	}
 }
