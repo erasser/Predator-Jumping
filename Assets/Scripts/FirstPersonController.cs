@@ -54,6 +54,13 @@ namespace StarterAssets
 		public GameObject jumpTargetPrefab;
 		Transform _jumpTargetTransform;
 		Transform _cameraTransform;
+		const float LongJumpDuration = 1;  // s
+		float _longJumpPhase;
+		bool _longJumping;
+		Vector3 _longJumpDir;
+		Vector3 _longJumpStartPos;
+
+		public static FirstPersonController firstPersonController;
 
 		// cinemachine
 		private float _cinemachineTargetPitch;
@@ -92,6 +99,8 @@ namespace StarterAssets
 
 		private void Awake()
 		{
+			firstPersonController = this;
+			
 			// get a reference to our main camera
 			if (_mainCamera == null)
 			{
@@ -125,6 +134,8 @@ namespace StarterAssets
 			GroundedCheck();
 			Move();
 			CastRayFromPlayerView();  // could be in FixedUpdate (as well as methods above)
+			// ProcessKeys();
+			ProcessLongJump();
 		}
 
 		private void LateUpdate()
@@ -277,15 +288,54 @@ namespace StarterAssets
 
 		void CastRayFromPlayerView()
 		{
+			if (_longJumping) return;
+
 			RaycastHit hit;
 
 			if (Physics.Raycast(_cameraTransform.position, _cameraTransform.forward, out hit))
 			{
 				_jumpTargetTransform.gameObject.SetActive(true);
 				_jumpTargetTransform.position = hit.point;
+				_longJumpDir = hit.point - _cameraTransform.position;
 			}
 			else if (_jumpTargetTransform.gameObject.activeSelf)
 				_jumpTargetTransform.gameObject.SetActive(false);
+		}
+
+		void ProcessKeys()
+		{
+			if (Input.GetKey(KeyCode.Mouse1))
+				InitiateLongJump();
+		}
+
+		public void InitiateLongJump()
+		{
+			if (!_jumpTargetTransform.gameObject.activeSelf || _longJumping)
+				return;
+
+			_longJumping = true;
+			_longJumpPhase = 0;
+			_longJumpStartPos = transform.position;
+		}
+
+		void ProcessLongJump()
+		{
+			if (!_longJumping) return;
+
+			_longJumpPhase += Time.deltaTime / LongJumpDuration;
+			print(_longJumpPhase);
+			if (_longJumpPhase >= 1)
+			{
+				_longJumping = false;
+				return;
+			}
+
+			// TODO: move player
+
+			transform.position = _longJumpStartPos + _longJumpDir * _longJumpPhase;
+
+
+
 		}
 	}
 }

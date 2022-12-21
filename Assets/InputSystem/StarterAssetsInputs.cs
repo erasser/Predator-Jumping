@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
 using UnityEngine.InputSystem;
@@ -36,13 +37,19 @@ namespace StarterAssets
 
 		public void OnJump(InputValue value)
 		{
-			JumpInput(value.isPressed);
+			// JumpInput(value.isPressed);
+			FirstPersonController.firstPersonController.InitiateLongJump();
 		}
 
 		public void OnSprint(InputValue value)
 		{
 			SprintInput(value.isPressed);
 		}
+
+		// public void OnLongJumpInput()
+		// {
+		// 	print("long jump!");
+		// }
 #endif
 
 
@@ -74,6 +81,14 @@ namespace StarterAssets
 		private void SetCursorState(bool newState)
 		{
 			Cursor.lockState = newState ? CursorLockMode.Locked : CursorLockMode.None;
+		}
+
+		void Update()
+		{
+			if(Keyboard.current.anyKey.wasPressedThisFrame)
+			{
+				
+			}
 		}
 	}
 	
